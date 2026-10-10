@@ -16,6 +16,9 @@ export const api = {
   // Auth
   register: (data) => fetch(`${API_BASE_URL}/auth/register`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
   login: (data) => fetch(`${API_BASE_URL}/auth/login`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  sendOtp: (data) => fetch(`${API_BASE_URL}/auth/send-otp`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  verifyOtp: (data) => fetch(`${API_BASE_URL}/auth/verify-otp`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  googleLogin: (data) => fetch(`${API_BASE_URL}/auth/google`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
   forgotPassword: (data) => fetch(`${API_BASE_URL}/auth/forgot-password`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
   getMe: () => fetch(`${API_BASE_URL}/auth/me`, { headers: getHeaders() }).then(r => r.json()),
   updateProfile: (data) => fetch(`${API_BASE_URL}/auth/profile`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
