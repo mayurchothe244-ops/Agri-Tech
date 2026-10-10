@@ -1,7 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
 import Navbar from './components/Navbar';
@@ -27,6 +27,24 @@ import NotificationsPage from './pages/NotificationsPage';
 import ContactUs from './pages/ContactUs';
 import UserProfile from './pages/UserProfile';
 
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-agri-800 font-bold text-sm">
+        माहिती लोड होत आहे (Loading User Session)...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -42,7 +60,7 @@ export default function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                   <Route path="/disease-detection" element={<DiseaseDetection />} />
                   <Route path="/fertilizer-recommendation" element={<FertilizerRec />} />
                   <Route path="/weather" element={<WeatherPage />} />
@@ -55,7 +73,7 @@ export default function App() {
                   <Route path="/voice-assistant" element={<VoiceAssistantPage />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
                   <Route path="/contact" element={<ContactUs />} />
-                  <Route path="/profile" element={<UserProfile />} />
+                  <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
                 </Routes>
               </main>
               <Footer />
