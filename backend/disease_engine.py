@@ -184,24 +184,6 @@ DISEASE_KNOWLEDGE_BASE = {
             "preventive_measures": [
                 "Maintain good drainage and canopy pruning for sun penetration"
             ]
-        },
-        {
-            "id": "grape_anthracnose",
-            "disease": "Grape Anthracnose / Bird's Eye Spot (द्राक्ष करपा / पक्षी डोळा रोग)",
-            "disease_hi": "अंगूर ऐंथ्रेक्नोज़",
-            "trigger_condition": "brown_black",
-            "symptoms": [
-                "Circular sunken dark spots with gray centers and reddish-brown margins",
-                "Shot-hole effect on leaves where dead spots drop out",
-                "Lesions on stems causing twig dieback"
-            ],
-            "recommendations": [
-                "Spray Copper Hydroxide 77% WP @ 2 g/liter or Carbendazim 50% WP @ 1 g/liter.",
-                "Prune infected shoots and spray 1% Bordeaux Mixture."
-            ],
-            "preventive_measures": [
-                "Destroy pruned trimmings immediately"
-            ]
         }
     ],
     "Cotton": [
@@ -222,24 +204,6 @@ DISEASE_KNOWLEDGE_BASE = {
             ],
             "preventive_measures": [
                 "Avoid water stress during boll filling stage"
-            ]
-        },
-        {
-            "id": "cotton_bacterial_blight",
-            "disease": "Cotton Bacterial Blight / Blackarm (कापूस काळा करपा)",
-            "disease_hi": "कपास जीवाणु झुलसा",
-            "trigger_condition": "brown_black",
-            "symptoms": [
-                "Angular water-soaked translucent leaf spots bounded by leaf veins",
-                "Black stem lesions causing twig snapping (Blackarm phase)",
-                "Water-soaked dark green spots on green bolls"
-            ],
-            "recommendations": [
-                "Spray Streptocycline @ 0.1 g + Copper Oxychloride @ 3 g per liter of water.",
-                "Repeat spray after 12 days if wet weather continues."
-            ],
-            "preventive_measures": [
-                "Delint seed with sulfuric acid before planting"
             ]
         }
     ],
@@ -262,24 +226,6 @@ DISEASE_KNOWLEDGE_BASE = {
             "preventive_measures": [
                 "Use certified mosaic resistant varieties like JS 335, Phule KALYANI",
                 "Seed treatment with Imidacloprid @ 5 ml/kg seed"
-            ]
-        },
-        {
-            "id": "soybean_rust",
-            "disease": "Soybean Rust / Brown Spot (सोयाबीन तांबेरा / तपकिरी टिपके)",
-            "disease_hi": "सोयाबीन रतुआ",
-            "trigger_condition": "brown_black",
-            "symptoms": [
-                "Tiny reddish-brown polygon pustules on lower leaf surface",
-                "Yellowing of canopy leaves leading to early defoliation",
-                "Drastic reduction in pod weight"
-            ],
-            "recommendations": [
-                "Spray Hexaconazole 5% EC @ 1 ml/liter or Propiconazole 25% EC @ 1 ml/liter.",
-                "Apply Pyraclostrobin 20% WG @ 1 g/liter."
-            ],
-            "preventive_measures": [
-                "Monitor lower leaves starting 35 days after sowing"
             ]
         }
     ],
@@ -324,24 +270,6 @@ DISEASE_KNOWLEDGE_BASE = {
             "preventive_measures": [
                 "Intercrop with maize or sorghum as border crop"
             ]
-        },
-        {
-            "id": "chilli_anthracnose",
-            "disease": "Chilli Anthracnose / Fruit Rot (मिरची फळ सड / करपा)",
-            "disease_hi": "मिर्च फल सड़न",
-            "trigger_condition": "brown_black",
-            "symptoms": [
-                "Circular sunken dark brown lesions on ripe red chilli fruits",
-                "Concentric rings of black acervuli spots on fruit skin",
-                "Straw-colored dry leaf spots"
-            ],
-            "recommendations": [
-                "Spray Azoxystrobin 23% SC @ 1 ml/liter or Pyraclostrobin @ 1 g/liter.",
-                "Remove and burn infected fruits from field."
-            ],
-            "preventive_measures": [
-                "Treat seed with Thiram or Captan @ 3 g/kg seed"
-            ]
         }
     ],
     "Wheat": [
@@ -362,23 +290,6 @@ DISEASE_KNOWLEDGE_BASE = {
             "preventive_measures": [
                 "Sow rust resistant varieties like HD 2967, GW 322",
                 "Avoid late sowing of wheat"
-            ]
-        },
-        {
-            "id": "wheat_brown_rust",
-            "disease": "Wheat Brown Rust (गहू तपकिरी तांबेरा)",
-            "disease_hi": "गेहूं भूरा रतुआ",
-            "trigger_condition": "brown_black",
-            "symptoms": [
-                "Small round orange-brown pustules randomly scattered on leaf blade",
-                "Pustules burst leaving brown dusty powder",
-                "Drying of leaf tips"
-            ],
-            "recommendations": [
-                "Spray Mancozeb 75% WP @ 2.5 g/liter or Tebuconazole @ 1 ml/liter."
-            ],
-            "preventive_measures": [
-                "Avoid excessive Nitrogen fertilizer dose"
             ]
         }
     ],
@@ -407,10 +318,10 @@ DISEASE_KNOWLEDGE_BASE = {
 
 def analyze_crop_image(image_bytes, crop_type="Tomato"):
     """
-    Intelligent Computer Vision & Multi-Spectral HSV Feature Classification Engine.
-    Extracts leaf color ratios (Green, Yellow, Brown/Black, White/Gray, Purple/Red),
-    calculates exact infected surface area %, assigns infection severity level (Soumya/Madhyam/Gambhir),
-    and dynamically matches the crop disease based on visual symptom signature.
+    Intelligent Computer Vision & Leaf Validation Classifier.
+    Step 1: Validates if image is actually a plant/crop leaf (rejects human faces, non-crop photos).
+    Step 2: Extracts plant color channels (Green, Yellow, Brown, White, Purple/Red).
+    Step 3: Dynamically matches crop disease & calculates severity level.
     """
     try:
         # Decode image using OpenCV
@@ -428,20 +339,36 @@ def analyze_crop_image(image_bytes, crop_type="Tomato"):
 
         # OpenCV Preprocessing & Multi-Spectral HSV Color Channel Extraction
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
 
-        # 1. Healthy Green Mask
-        green_lower = np.array([35, 40, 40])
-        green_upper = np.array([85, 255, 255])
+        # -------------------------------------------------------------
+        # STEP 1: HUMAN FACE / SKIN & NON-CROP IMAGE FILTER
+        # Detect Human Skin Tone (YCrCb: Cr [133, 173], Cb [77, 127] & HSV H [0, 25])
+        # -------------------------------------------------------------
+        skin_lower_hsv = np.array([0, 20, 70])
+        skin_upper_hsv = np.array([25, 160, 255])
+        skin_mask_hsv = cv2.inRange(hsv, skin_lower_hsv, skin_upper_hsv)
+
+        skin_lower_ycrcb = np.array([0, 133, 77])
+        skin_upper_ycrcb = np.array([255, 173, 127])
+        skin_mask_ycrcb = cv2.inRange(ycrcb, skin_lower_ycrcb, skin_upper_ycrcb)
+
+        skin_mask = skin_mask_hsv & skin_mask_ycrcb
+        skin_ratio = np.sum(skin_mask > 0) / total_pixels
+
+        # Calculate Plant Foliage Greenness Mask
+        green_lower = np.array([30, 30, 30])
+        green_upper = np.array([90, 255, 255])
         green_mask = cv2.inRange(hsv, green_lower, green_upper)
         green_ratio = np.sum(green_mask > 0) / total_pixels
 
-        # 2. Disease Yellow / Chlorosis Mask
-        yellow_lower = np.array([16, 50, 50])
+        # Calculate Plant Chlorosis Yellow Mask
+        yellow_lower = np.array([16, 40, 40])
         yellow_upper = np.array([34, 255, 255])
         yellow_mask = cv2.inRange(hsv, yellow_lower, yellow_upper)
         yellow_ratio = np.sum(yellow_mask > 0) / total_pixels
 
-        # 3. Necrotic Brown / Black Spot Mask
+        # Calculate Plant Necrosis Brown / Black Spot Mask
         brown_lower1 = np.array([0, 40, 20])
         brown_upper1 = np.array([15, 255, 180])
         brown_lower2 = np.array([165, 40, 20])
@@ -449,17 +376,28 @@ def analyze_crop_image(image_bytes, crop_type="Tomato"):
         brown_mask = cv2.inRange(hsv, brown_lower1, brown_upper1) | cv2.inRange(hsv, brown_lower2, brown_upper2)
         brown_ratio = np.sum(brown_mask > 0) / total_pixels
 
-        # 4. Powdery Mildew White / Gray Mask
+        # Calculate Powdery Mildew White Mask
         white_lower = np.array([0, 0, 180])
         white_upper = np.array([180, 40, 255])
         white_mask = cv2.inRange(hsv, white_lower, white_upper)
         white_ratio = np.sum(white_mask > 0) / total_pixels
 
-        # 5. Purple / Red Margin Mask (for Red Blotch / Cotton Reddening)
+        # Calculate Purple / Red Mask
         purple_lower = np.array([135, 40, 40])
         purple_upper = np.array([164, 255, 255])
         purple_mask = cv2.inRange(hsv, purple_lower, purple_upper)
         purple_ratio = np.sum(purple_mask > 0) / total_pixels
+
+        # Plant Foliage Check: Total agricultural plant feature coverage
+        plant_feature_coverage = green_ratio + yellow_ratio + brown_ratio + white_ratio + purple_ratio
+
+        # REJECT IF HUMAN SKIN DOMINATES OR NO PLANT FOLIAGE DETECTED
+        if skin_ratio > 0.28 or plant_feature_coverage < 0.12:
+            return {
+                "success": False,
+                "is_non_crop": True,
+                "error": "हा फोटो पिकाच्या किंवा झाडाच्या पानाचा वाटत नाही! 🛑 कृपया फक्त पिकाच्या पानाचा किंवा रोगाचा स्पष्ट फोटो घ्या. (Non-crop or human image detected)"
+            }
 
         # Calculate Total Infected Leaf Surface Area Percentage
         infected_ratio = yellow_ratio + brown_ratio + white_ratio + purple_ratio
@@ -472,7 +410,7 @@ def analyze_crop_image(image_bytes, crop_type="Tomato"):
         # -------------------------------------------------------------
         # CASE 1: HEALTHY LEAF DIAGNOSIS
         # -------------------------------------------------------------
-        if green_ratio > 0.55 and infected_area_pct < 12.0:
+        if green_ratio > 0.50 and infected_area_pct < 12.0:
             return {
                 "success": True,
                 "crop_type": selected_crop,
@@ -510,7 +448,6 @@ def analyze_crop_image(image_bytes, crop_type="Tomato"):
         # -------------------------------------------------------------
         # CASE 2: DISEASED LEAF FEATURE MATCHING & CLASSIFICATION
         # -------------------------------------------------------------
-        # Determine primary color symptom trigger condition
         if white_ratio > 0.12:
             symptom_trigger = "white"
         elif yellow_ratio > brown_ratio and yellow_ratio > purple_ratio and yellow_ratio > 0.12:
@@ -520,18 +457,15 @@ def analyze_crop_image(image_bytes, crop_type="Tomato"):
         else:
             symptom_trigger = "brown_black"
 
-        # Match disease from knowledge base matching trigger_condition
         matched_disease = None
         for d in diseases_list:
             if d.get("trigger_condition") == symptom_trigger:
                 matched_disease = d
                 break
 
-        # Fallback if specific trigger match not found
         if not matched_disease:
             matched_disease = diseases_list[0]
 
-        # Determine Infection Severity Level (सौम्य / मध्यम / गंभीर)
         if infected_area_pct < 20.0:
             severity = "सौम्य (Mild Infection)"
         elif infected_area_pct <= 45.0:
@@ -539,7 +473,6 @@ def analyze_crop_image(image_bytes, crop_type="Tomato"):
         else:
             severity = "गंभीर (Severe Infection - Immediate Action Needed!)"
 
-        # Dynamic Confidence Calculation based on feature purity
         base_conf = 0.85
         if symptom_trigger == "white":
             conf = min(0.97, base_conf + white_ratio * 0.5)
