@@ -319,9 +319,9 @@ DISEASE_KNOWLEDGE_BASE = {
 def analyze_crop_image(image_bytes, crop_type="Tomato"):
     """
     Intelligent Computer Vision & Leaf Validation Classifier.
-    Step 1: Validates if image is actually a plant/crop leaf (rejects human faces, non-crop photos).
-    Step 2: Extracts plant color channels (Green, Yellow, Brown, White, Purple/Red).
-    Step 3: Dynamically matches crop disease & calculates severity level.
+    Strictly validates if image is actually a plant/crop leaf (rejects human faces, selfies, non-crop photos).
+    Extracts plant color channels (Green, Yellow, Brown, White, Purple/Red).
+    Dynamically matches crop disease & calculates severity level.
     """
     try:
         # Decode image using OpenCV
@@ -337,38 +337,46 @@ def analyze_crop_image(image_bytes, crop_type="Tomato"):
         height, width, _ = img.shape
         total_pixels = float(height * width)
 
-        # OpenCV Preprocessing & Multi-Spectral HSV Color Channel Extraction
+        # Preprocessing & Multi-Spectral HSV Color Channel Extraction
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
 
         # -------------------------------------------------------------
-        # STEP 1: HUMAN FACE / SKIN & NON-CROP IMAGE FILTER
-        # Detect Human Skin Tone (YCrCb: Cr [133, 173], Cb [77, 127] & HSV H [0, 25])
+        # STEP 1: STRICT HUMAN FACE & NON-LEAF PORTRAIT FILTER
+        # Detect Human Skin Tones (YCrCb: Cr [130, 175], Cb [75, 130])
         # -------------------------------------------------------------
-        skin_lower_hsv = np.array([0, 20, 70])
-        skin_upper_hsv = np.array([25, 160, 255])
+        skin_lower_hsv = np.array([0, 15, 60])
+        skin_upper_hsv = np.array([30, 170, 255])
         skin_mask_hsv = cv2.inRange(hsv, skin_lower_hsv, skin_upper_hsv)
 
-        skin_lower_ycrcb = np.array([0, 133, 77])
-        skin_upper_ycrcb = np.array([255, 173, 127])
+        skin_lower_ycrcb = np.array([0, 130, 75])
+        skin_upper_ycrcb = np.array([255, 175, 130])
         skin_mask_ycrcb = cv2.inRange(ycrcb, skin_lower_ycrcb, skin_upper_ycrcb)
 
         skin_mask = skin_mask_hsv & skin_mask_ycrcb
         skin_ratio = np.sum(skin_mask > 0) / total_pixels
 
-        # Calculate Plant Foliage Greenness Mask
+        # Extract Center Region of Image (where actual crop leaf MUST be present in a close-up)
+        ch_start, ch_end = int(height * 0.2), int(height * 0.8)
+        cw_start, cw_end = int(width * 0.2), int(width * 0.8)
+        center_hsv = hsv[ch_start:ch_end, cw_start:cw_end]
+        center_total = float((ch_end - ch_start) * (cw_end - cw_start))
+
+        # Center Region Foliage Greenness & Disease Feature Coverage
         green_lower = np.array([30, 30, 30])
         green_upper = np.array([90, 255, 255])
+        center_green_mask = cv2.inRange(center_hsv, green_lower, green_upper)
+        center_green_ratio = np.sum(center_green_mask > 0) / center_total
+
+        # Whole Image Color Channel Ratios
         green_mask = cv2.inRange(hsv, green_lower, green_upper)
         green_ratio = np.sum(green_mask > 0) / total_pixels
 
-        # Calculate Plant Chlorosis Yellow Mask
         yellow_lower = np.array([16, 40, 40])
         yellow_upper = np.array([34, 255, 255])
         yellow_mask = cv2.inRange(hsv, yellow_lower, yellow_upper)
         yellow_ratio = np.sum(yellow_mask > 0) / total_pixels
 
-        # Calculate Plant Necrosis Brown / Black Spot Mask
         brown_lower1 = np.array([0, 40, 20])
         brown_upper1 = np.array([15, 255, 180])
         brown_lower2 = np.array([165, 40, 20])
@@ -376,27 +384,23 @@ def analyze_crop_image(image_bytes, crop_type="Tomato"):
         brown_mask = cv2.inRange(hsv, brown_lower1, brown_upper1) | cv2.inRange(hsv, brown_lower2, brown_upper2)
         brown_ratio = np.sum(brown_mask > 0) / total_pixels
 
-        # Calculate Powdery Mildew White Mask
         white_lower = np.array([0, 0, 180])
         white_upper = np.array([180, 40, 255])
         white_mask = cv2.inRange(hsv, white_lower, white_upper)
         white_ratio = np.sum(white_mask > 0) / total_pixels
 
-        # Calculate Purple / Red Mask
         purple_lower = np.array([135, 40, 40])
         purple_upper = np.array([164, 255, 255])
         purple_mask = cv2.inRange(hsv, purple_lower, purple_upper)
         purple_ratio = np.sum(purple_mask > 0) / total_pixels
 
-        # Plant Foliage Check: Total agricultural plant feature coverage
-        plant_feature_coverage = green_ratio + yellow_ratio + brown_ratio + white_ratio + purple_ratio
-
-        # REJECT IF HUMAN SKIN DOMINATES OR NO PLANT FOLIAGE DETECTED
-        if skin_ratio > 0.28 or plant_feature_coverage < 0.12:
+        # STRICT NON-CROP & HUMAN SELFIE REJECTION:
+        # Rejects if skin_ratio > 0.04 (4% skin present anywhere) OR if center green leaf coverage < 0.15
+        if skin_ratio > 0.04 or (center_green_ratio < 0.15 and green_ratio < 0.20):
             return {
                 "success": False,
                 "is_non_crop": True,
-                "error": "हा फोटो पिकाच्या किंवा झाडाच्या पानाचा वाटत नाही! 🛑 कृपया फक्त पिकाच्या पानाचा किंवा रोगाचा स्पष्ट फोटो घ्या. (Non-crop or human image detected)"
+                "error": "हा फोटो पिकाच्या पानाचा नाही! 🛑 तुम्ही व्यक्तीचा किंवा इतर वस्तूचा फोटो निवडला आहे. कृपया फक्त पिकाच्या पानाचा स्पष्ट क्लोज-अप (Close-up) फोटो अपलोड करा."
             }
 
         # Calculate Total Infected Leaf Surface Area Percentage
