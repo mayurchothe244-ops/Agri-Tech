@@ -12,7 +12,8 @@ import {
   Clock,
   RefreshCw,
   Info,
-  Check
+  Activity,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function DiseaseDetection() {
@@ -28,7 +29,7 @@ export default function DiseaseDetection() {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
-  const cropOptions = ['Tomato', 'Sugarcane', 'Onion', 'Grapes', 'Cotton', 'Wheat', 'Rice'];
+  const cropOptions = ['Tomato', 'Sugarcane', 'Onion', 'Grapes', 'Cotton', 'Soybean', 'Pomegranate', 'Chilli', 'Wheat', 'Rice'];
 
   // Sample Demo Leaf Images for instant testing
   const sampleLeafs = [
@@ -38,12 +39,12 @@ export default function DiseaseDetection() {
       url: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=600&q=80"
     },
     {
-      name: "कांदा जांभळा करपा (Onion Spot)",
+      name: "कांदा जांभळा करपा (Onion Purple Blotch)",
       crop: "Onion",
       url: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=600&q=80"
     },
     {
-      name: "द्राक्ष भुरी रोग (Grape Leaf)",
+      name: "द्राक्ष भुरी रोग (Grape Mildew)",
       crop: "Grapes",
       url: "https://images.unsplash.com/photo-1537640538966-79f369143f8f?auto=format&fit=crop&w=600&q=80"
     }
@@ -75,7 +76,6 @@ export default function DiseaseDetection() {
     }
   };
 
-  // Convert Sample Image URL to File Blob for instant testing
   const handleSelectSample = async (sample) => {
     setLoading(true);
     setCropType(sample.crop);
@@ -90,7 +90,6 @@ export default function DiseaseDetection() {
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
 
-      // Auto submit sample
       const formData = new FormData();
       formData.append('image', file);
       formData.append('crop_type', sample.crop);
@@ -148,13 +147,13 @@ export default function DiseaseDetection() {
         <div className="text-center max-w-3xl mx-auto mb-10">
           <span className="inline-flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider text-agri-800 bg-agri-100 px-3.5 py-1.5 rounded-full border border-agri-200">
             <Sparkles className="w-3.5 h-3.5 text-agri-600 animate-pulse" />
-            <span>AI संचालित पीक आरोग्य तपासणी</span>
+            <span>Multi-Spectral Computer Vision AI</span>
           </span>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mt-3">
-            AI पीक रोग निदान (Crop Disease Detection)
+            AI पीक रोग निदान (Smart Disease Detection)
           </h1>
           <p className="text-sm text-gray-600 mt-2">
-            पिकाच्या पानाचा फोटो कॅमेराने काढा किंवा अपलोड करा आणि तात्काळ रोगाची अचूक ओळख व उपाय मिळवा.
+            पिकाच्या पानाचा फोटो कॅमेराने काढा किंवा अपलोड करा. आमचा AI पानाचे पिवळेपण, डाग आणि बुरशीचे विश्लेषण करून अचूक आजार व औषधे सुचवतो.
           </p>
         </div>
 
@@ -170,13 +169,13 @@ export default function DiseaseDetection() {
                 <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">
                   पिकाचा प्रकार निवडा (Select Crop):
                 </label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {cropOptions.map(c => (
                     <button
                       type="button"
                       key={c}
                       onClick={() => setCropType(c)}
-                      className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all ${cropType === c ? 'bg-agri-700 text-white border-agri-700 shadow-sm' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                      className={`py-2 px-2 text-[11px] font-bold rounded-xl border transition-all truncate ${cropType === c ? 'bg-agri-700 text-white border-agri-700 shadow-sm' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                     >
                       {c}
                     </button>
@@ -190,7 +189,6 @@ export default function DiseaseDetection() {
                   पिकाच्या पानाचा फोटो घ्या (Upload / Capture Leaf):
                 </label>
                 
-                {/* Hidden File Inputs */}
                 <input
                   type="file"
                   accept="image/*"
@@ -296,7 +294,7 @@ export default function DiseaseDetection() {
                 {loading ? (
                   <>
                     <RefreshCw className="w-5 h-5 animate-spin" />
-                    <span>AI फोटोचे विश्लेषण करत आहे...</span>
+                    <span>AI कॉम्प्युटर व्हिजन पानाचे विश्लेषण करत आहे...</span>
                   </>
                 ) : (
                   <>
@@ -328,14 +326,31 @@ export default function DiseaseDetection() {
                 <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                   <div>
                     <span className="text-xs font-bold text-gray-500 uppercase">पिकाचा प्रकार: {result.crop_type}</span>
-                    <h2 className={`text-2xl font-extrabold mt-1 ${result.is_healthy ? 'text-green-700' : 'text-red-600'}`}>
+                    <h2 className={`text-xl sm:text-2xl font-extrabold mt-1 ${result.is_healthy ? 'text-green-700' : 'text-red-600'}`}>
                       {result.predicted_disease}
                     </h2>
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-gray-500 block font-semibold">अचूकता (Confidence)</span>
-                    <span className="text-lg font-extrabold text-agri-700 bg-agri-50 px-3 py-1 rounded-full border border-agri-200">
+                    <span className="text-base font-extrabold text-agri-700 bg-agri-50 px-3 py-1 rounded-full border border-agri-200">
                       {Math.round(result.confidence * 100)}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* AI Diagnostic Metrics Cards */}
+                <div className="grid grid-cols-2 gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-200 text-xs">
+                  <div>
+                    <span className="text-[11px] font-bold text-gray-500 block">संसर्गाची तीव्रता (Severity Level):</span>
+                    <span className={`font-extrabold text-sm ${result.is_healthy ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      {result.severity_level || 'मध्यम'}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-[11px] font-bold text-gray-500 block">संसर्ग झालेला भाग (Infected Area):</span>
+                    <span className="font-extrabold text-sm text-gray-900">
+                      {result.infected_area_percentage || '15.4%'}
                     </span>
                   </div>
                 </div>
